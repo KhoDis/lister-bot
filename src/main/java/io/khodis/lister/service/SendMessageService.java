@@ -1,5 +1,7 @@
 package io.khodis.lister.service;
 
+import org.springframework.stereotype.Component;
+
 public interface SendMessageService {
-    void sendMessage(String chatId, String message);
+    void sendMessage(long chatId, String message);
 }

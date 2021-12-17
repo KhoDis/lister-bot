@@ -3,7 +3,9 @@ package io.khodis.lister;
 import io.khodis.lister.command.ChatCommand;
 import io.khodis.lister.command.CommandContainer;
 import io.khodis.lister.command.CommandDesignation;
+import io.khodis.lister.command.CommandStatus;
 import io.khodis.lister.config.BotProperties;
+import io.khodis.lister.service.UserService;
 import io.khodis.lister.service.impl.SendMessageServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,8 +23,8 @@ public class Bot extends TelegramLongPollingBot {
     private final Pattern cancelCommandPattern = Pattern.compile("^" + CommandDesignation.CANCEL + "[a-zA-Z]+");
     private ChatCommand chatCommand;
 
-    public Bot(BotProperties properties) {
-        this.commandContainer = new CommandContainer(new SendMessageServiceImpl(this));
+    public Bot(BotProperties properties, UserService userService) {
+        this.commandContainer = new CommandContainer(new SendMessageServiceImpl(this), userService);
         this.properties = properties;
     }
 
@@ -38,6 +40,7 @@ public class Bot extends TelegramLongPollingBot {
             String message = update.getMessage().getText().trim();
             if (message.startsWith(COMMAND_PREFIX)) {
                 String commandIdentifier = message.split(" ")[0].toLowerCase();
+                commandIdentifier = commandIdentifier.substring(COMMAND_PREFIX.length());
 
                 commandContainer.getCommand(commandIdentifier).execute(update);
             }
@@ -45,15 +48,16 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private boolean handleChatCommand(Update update) {
-        if (chatCommand != null) {
-            if (update.hasMessage() && update.getMessage().hasText()) {
-                if (cancelCommandPattern.matcher(update.getMessage().getText()).matches()) {
-                    chatCommand.cancel(update);
-                }
-            }
-            return chatCommand.execute(update);
+        if (chatCommand == null) {
+            return false;
         }
-        return false;
+        if (!update.hasMessage() || !update.getMessage().hasText()) {
+            return chatCommand.execute(update) == CommandStatus.CONTINUE;
+        }
+        if (cancelCommandPattern.matcher(update.getMessage().getText()).matches()) {
+            chatCommand.cancel(update);
+        }
+        return chatCommand.execute(update) == CommandStatus.CONTINUE;
     }
 
     @Override

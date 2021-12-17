@@ -3,10 +3,12 @@ package io.khodis.lister.service.impl;
 import io.khodis.lister.Bot;
 import io.khodis.lister.service.SendMessageService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Slf4j
+@Component
 public class SendMessageServiceImpl implements SendMessageService {
     private final Bot bot;
 
@@ -15,9 +17,9 @@ public class SendMessageServiceImpl implements SendMessageService {
     }
 
     @Override
-    public void sendMessage(String chatId, String message) {
+    public void sendMessage(long chatId, String message) {
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
+        sendMessage.setChatId(String.valueOf(chatId));
         sendMessage.enableHtml(true);
         sendMessage.setText(message);
 

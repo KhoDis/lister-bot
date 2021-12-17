@@ -1,11 +1,18 @@
 package io.khodis.lister.command;
 
+import io.khodis.lister.service.SendMessageService;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 public class UnknownCommand implements Command {
-    @Override
-    public boolean execute(Update update) {
+    private final SendMessageService sendMessageService;
 
-        return false;
+    public UnknownCommand(SendMessageService sendMessageService) {
+        this.sendMessageService = sendMessageService;
+    }
+
+    @Override
+    public CommandStatus execute(Update update) {
+        sendMessageService.sendMessage(update.getMessage().getChatId(), "what is that " + update.getMessage().getText() + " command");
+        return CommandStatus.EXIT;
     }
 }
